@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import iqrobotLogo from "./image/iqrobot.png";
-import image from "next/dist/api/image";
+import thumbnailImage from "./image/tmbnail.jpeg";
 
 const supabase = createClient();
 const NOMOR_WHATSAPP_ADMIN = "6285700415441"; 
@@ -40,6 +40,10 @@ export default function DashboardPage() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"film" | "trailer">("film");
   const [showAssistant, setShowAssistant] = useState(false);
+
+  // State untuk Fitur Like Origin Story
+  const [originStoryLikes, setOriginStoryLikes] = useState<number>(0);
+  const [hasLikedOrigin, setHasLikedOrigin] = useState<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -83,6 +87,40 @@ export default function DashboardPage() {
       isMounted = false;
     };
   }, []);
+
+  // Fetch data likes untuk Origin Story setelah videos & userId siap
+  useEffect(() => {
+    async function fetchOriginLikes() {
+      const originVideo = videos.find(v => v.title.toLowerCase().includes("iqrobot"));
+      if (!originVideo) return;
+
+      // 1. Ambil total likes
+      const { count } = await supabase
+        .from("video_likes")
+        .select("*", { count: "exact", head: true })
+        .eq("video_id", originVideo.id);
+
+      setOriginStoryLikes(count || 0);
+
+      // 2. Cek apakah user yang sedang login sudah like
+      if (userId) {
+        const { data: userLike } = await supabase
+          .from("video_likes")
+          .select("id")
+          .eq("video_id", originVideo.id)
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (userLike) {
+          setHasLikedOrigin(true);
+        }
+      }
+    }
+
+    if (videos.length > 0) {
+      fetchOriginLikes();
+    }
+  }, [videos, userId]);
 
   useEffect(() => {
     if (!userId) return;
@@ -131,6 +169,40 @@ export default function DashboardPage() {
     }
 
     setSelectedVideo(video);
+  };
+
+  const handleLikeOriginStory = async () => {
+    if (!userId) {
+      router.push("/login");
+      return;
+    }
+
+    const originVideo = videos.find(v => v.title.toLowerCase().includes("iqrobot"));
+    if (!originVideo) return;
+
+    if (hasLikedOrigin) {
+      // Unlike
+      const { error } = await supabase
+        .from("video_likes")
+        .delete()
+        .eq("video_id", originVideo.id)
+        .eq("user_id", userId);
+
+      if (!error) {
+        setHasLikedOrigin(false);
+        setOriginStoryLikes((prev) => Math.max(0, prev - 1));
+      }
+    } else {
+      // Like
+      const { error } = await supabase
+        .from("video_likes")
+        .insert({ video_id: originVideo.id, user_id: userId });
+
+      if (!error) {
+        setHasLikedOrigin(true);
+        setOriginStoryLikes((prev) => prev + 1);
+      }
+    }
   };
 
   const handleUpgradeViaWhatsApp = () => {
@@ -197,6 +269,7 @@ Mohon instruksi pembayaran selengkapnya. Terima kasih!`;
           }
         }
       `}</style>
+      
       {/* Animated Background Elements - Grayscale */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -right-40 w-48 h-48 sm:w-80 sm:h-80 bg-white/5 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-float"></div>
@@ -338,21 +411,22 @@ Mohon instruksi pembayaran selengkapnya. Terima kasih!`;
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between relative z-10">
               <div className="max-w-2xl">
                 <p className="text-3xl font-semibold uppercase tracking-[0.2em] text-white/60 animate-slide-in">
-                  Selamat Datang
+                  Ayo Selesaikan Misimu!!!
                 </p>
                 <h2 className="mt-2 text-2xl font-bold text-white animate-slide-in-delayed">
-                  {userId ? (profile?.email ? profile.email.split("@")[0] : profile?.email || "Pengguna") : "Tamu"}
+                  {userId ? (profile?.email ? profile.email.split("@")[0] : profile?.email || "Pengguna") : "Menjadi Teman IQROBOT"}
                 </h2>
                 <p className="mb-26 mt-2 text-sm text-gray-400 animate-slide-in-delayed-2">
                   {userId
                     ? (
                       <>
-                        IQROBOT. Superhero yang terinspirasi Al-Qur'an.
+                        Belajar bersama lebih dekat dengan nilai - nilai Al-Qu'an melalui kisah dan kreativitas. 
+                        <br/> Menjadi teman screen time yang seru sekaligus membentuk akhlak dan kebiasaan yang baik.
                         <br />
-                        Platform Dakwah & Edukasi Anak berbasis IP Karakter dan Storytelling.
+                        Storytelling - Vidio Edukasi - Roadshow
                       </>
                     )
-                    : "Login untuk menikmati akses penuh ke koleksi teaser dan video kami."}
+                    : "AYOO GUYSS LOGIN DULUUU!!"}
                 </p>
               </div>
 
@@ -367,27 +441,75 @@ Mohon instruksi pembayaran selengkapnya. Terima kasih!`;
                 />
               </div>
             </div>
-            {/* Animated gradient line - Grayscale */}
             <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-white/20 via-white/40 to-white/20 bg-[length:200%_100%] animate-gradient-x"></div>
           </div>
+        </section>
 
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-sm transition-all duration-300 hover:shadow-white/5">
-            <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-white">Our Gallery</h2>
-                <p className="text-sm text-gray-400">Koleksi visual dari tim kami.</p>
+        {/* Section Origin Story dengan Tombol Like & Counter */}
+        <section className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg shadow-white/5 transition-all duration-300 hover:shadow-white/10">
+          <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr] xl:grid-cols-[1.5fr_1fr] items-center">
+            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/80">
+              <img
+                src={thumbnailImage.src}
+                alt="Thumbnail Origin Story"
+                className="h-72 w-full min-h-[18rem] object-cover"
+              />
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-black text-3xl shadow-xl">
+                  ▶
+                </div>
               </div>
-              <a
-                href="/galery"
-                className="inline-flex items-center justify-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500"
-              >
-                Lebih Banyak
-              </a>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-2">
-              <div className="flex w-max animate-[gallery-scroll_20s_linear_infinite] items-center gap-4">
-                {galleryImages.concat(galleryImages).map((image, index) => (
+            <div className="space-y-4">
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-sm shadow-white/5">
+                <p className="text-sm uppercase tracking-[0.3em] text-indigo-300">Origin Story</p>
+                <h3 className="mt-3 text-2xl font-bold text-white">IQROBOT</h3>
+                <p className="mt-3 text-sm leading-6 text-gray-300">
+                 Kisah original IQROBOT, superhero yang terinspirasi Al-Qur'an, dalam surat Al-Fiil.
+                </p>
+
+                {/* Tombol Like & Counter di Bawah Deskripsi */}
+                <div className="mt-5 flex items-center gap-3 pt-4 border-t border-white/10">
+                  <button
+                    onClick={handleLikeOriginStory}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                      hasLikedOrigin
+                        ? "bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30"
+                        : "bg-white/10 text-white hover:bg-white/20 border border-white/10"
+                    }`}
+                  >
+                    <span>{hasLikedOrigin ? "❤️" : "🤍"}</span>
+                    <span>{hasLikedOrigin ? "Liked" : "Like"}</span>
+                  </button>
+                  <span className="text-sm text-gray-300 font-medium">
+                    {originStoryLikes} Suka
+                  </span>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Our Gallery */}
+        <section className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-sm transition-all duration-300 hover:shadow-white/5">
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 className="text-xl font-bold text-white">Our Gallery</h2>
+                <p className="text-sm text-gray-400">Koleksi visual dari tim kami.</p>
+            </div>
+            <a
+                href="/galery"
+                className="inline-flex items-center justify-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500"
+            >
+                Lebih Banyak
+            </a>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-2">
+            <div className="flex w-max animate-[gallery-scroll_20s_linear_infinite] items-center gap-4">
+              {galleryImages.concat(galleryImages).map((image, index) => (
                   <div
                     key={`gallery-${index}`}
                     className="group relative h-40 sm:h-48 md:h-56 min-w-[160px] sm:min-w-[288px] md:min-w-[320px] shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all duration-500 hover:scale-105 hover:shadow-xl hover:shadow-white/10"
@@ -399,33 +521,7 @@ Mohon instruksi pembayaran selengkapnya. Terima kasih!`;
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
                   </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        </section>
-
-        <section className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg shadow-white/5 transition-all duration-300 hover:shadow-white/10">
-          <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr] xl:grid-cols-[1.5fr_1fr] items-center">
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/80">
-              <iframe
-                src={getEmbedUrl("https://drive.google.com/file/d/1kM8V1Y7oB32Ytl46Gf6x1tch25pO-oIG/view?usp=sharing")}
-                title="Teaser 01"
-                className="h-72 w-full min-h-[18rem] border-0"
-                allow="autoplay; fullscreen; encrypted-media"
-                allowFullScreen
-              />
-              <div className="absolute top-4 right-4 h-10 w-10 bg-black/40 backdrop-blur-lg"></div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-sm shadow-white/5">
-                <p className="text-sm uppercase tracking-[0.3em] text-indigo-300">Teaser 01</p>
-                <h3 className="mt-3 text-2xl font-bold text-white">Iqrobot</h3>
-                <p className="mt-3 text-sm leading-6 text-gray-300">
-                 Descripsi singkat tentang teaser ini. Teaser ini.
-                </p>
-              </div>
+              ))}
             </div>
           </div>
         </section>
@@ -472,7 +568,7 @@ Mohon instruksi pembayaran selengkapnya. Terima kasih!`;
               >
                 <div>
                   <div 
-                    onClick={() => handleWatchClick(v)}
+                    onClick={() => handleWatchClick(v)} 
                     className="relative aspect-video w-full bg-black overflow-hidden cursor-pointer"
                   >
                     {v.thumbnail_url ? (
