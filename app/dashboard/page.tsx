@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import iqrobotLogo from "./image/iqrobot.png";
+import logoImage from "./image/logo.png";
 import thumbnailImage from "./image/tmbnail.jpeg";
 
 const supabase = createClient();
@@ -469,22 +470,24 @@ Mohon instruksi pembayaran selengkapnya. Terima kasih!`;
                  Kisah original IQROBOT, superhero yang terinspirasi Al-Qur'an, dalam surat Al-Fiil.
                 </p>
 
-                {/* Tombol Like & Counter di Bawah Deskripsi */}
-                <div className="mt-5 flex items-center gap-3 pt-4 border-t border-white/10">
-                  <button
-                    onClick={handleLikeOriginStory}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                      hasLikedOrigin
-                        ? "bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30"
-                        : "bg-white/10 text-white hover:bg-white/20 border border-white/10"
-                    }`}
-                  >
-                    <span>{hasLikedOrigin ? "❤️" : "🤍"}</span>
-                    <span>{hasLikedOrigin ? "Liked" : "Like"}</span>
-                  </button>
-                  <span className="text-sm text-gray-300 font-medium">
-                    {originStoryLikes} Suka
-                  </span>
+                {/* Tombol Watch & Like & Counter di Bawah Deskripsi */}
+                <div className="mt-5 space-y-3 pt-4 border-t border-white/10">  
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleLikeOriginStory}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                        hasLikedOrigin
+                          ? "bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30"
+                          : "bg-white/10 text-white hover:bg-white/20 border border-white/10"
+                      }`}
+                    >
+                      <span>{hasLikedOrigin ? "❤️" : "🤍"}</span>
+                      <span>{hasLikedOrigin ? "Liked" : "Like"}</span>
+                    </button>
+                    <span className="text-sm text-gray-300 font-medium">
+                      {originStoryLikes} Suka
+                    </span>
+                  </div>
                 </div>
 
               </div>
@@ -535,7 +538,7 @@ Mohon instruksi pembayaran selengkapnya. Terima kasih!`;
                 : "bg-white/5 text-white hover:bg-white/10 border border-white/10 hover:scale-105"
             }`}
           >
-            🍿 Playlist Teaser
+            🍿 Tonton Gratis Sekarang
           </button>
           <button
             onClick={() => setActiveTab("trailer")}
@@ -545,7 +548,7 @@ Mohon instruksi pembayaran selengkapnya. Terima kasih!`;
                 : "bg-white/5 text-white hover:bg-white/10 border border-white/10 hover:scale-105"
             }`}
           >
-            🎬 Video
+            🎬 Khusus Pelanggan
           </button>
         </div>
 
@@ -644,6 +647,46 @@ Mohon instruksi pembayaran selengkapnya. Terima kasih!`;
           )}
         </div>
 
+        <footer className="mt-10 rounded-3xl border border-white/10 bg-white/5 px-6 py-8 shadow-lg shadow-white/5 backdrop-blur-sm">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <img
+                src={logoImage.src}
+                alt="IQROBOT logo"
+                className="h-12 w-auto object-contain"
+              />
+              <div>
+                <p className="text-sm text-gray-400">
+                  Dukung IQROBOT
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300">
+              <a
+                href="https://wa.me/6285700415441"
+                target="_blank"
+                rel="noreferrer"
+                className="transition hover:text-white"
+              >
+                WhatsApp
+              </a>
+              <a
+                href="mailto:admin@iqrobot.id"
+                className="transition hover:text-white"
+              >
+                Kontak
+              </a>
+              <Link href="/galery" className="transition hover:text-white">
+                Galeri
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-6 border-t border-white/10 pt-4 text-sm text-gray-500">
+            © 2026 IQROBOT.ID. Semua hak dilindungi.
+          </div>
+        </footer>
       </div>
 
       {showPremiumModal && (
