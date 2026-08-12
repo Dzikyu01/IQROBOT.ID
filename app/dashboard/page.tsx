@@ -550,6 +550,15 @@ Mohon instruksi pembayaran selengkapnya. Terima kasih!`;
           >
             🎬 Khusus Pelanggan
           </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link 
+              href="/dashboard/game"
+              className="group relative p-2 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-xl transition-all duration-300 hover:scale-[1.02] shadow-lg"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <h3 className="text-1xl font-semibold text-white">🎮 Game</h3>
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -560,6 +569,7 @@ Mohon instruksi pembayaran selengkapnya. Terima kasih!`;
                 Belum ada konten dalam kategori {activeTab === "film" ? "Playlist Teaser" : "Video"}.
               </p>
             </div>
+            
           ) : (
             filteredVideos.map((v, index) => (
               <div
@@ -646,7 +656,6 @@ Mohon instruksi pembayaran selengkapnya. Terima kasih!`;
             ))
           )}
         </div>
-
           <footer className="mt-10 border-t border-white/10 bg-gradient-to-b from-transparent to-white/5 px-4 py-8 backdrop-blur-sm">
             <div className="mx-auto max-w-6xl">
               {/* Main Content */}
